@@ -130,6 +130,7 @@ local ImGuiApp = require 'imguiapp'
 local gl = require 'ffi.OpenGL'
 local ig = require 'ffi.imgui'
 local App = class(ImGuiApp)
+App.title = 'Lambda-CDM model'
 function App:update()
 	gl.glClear(gl.GL_COLOR_BUFFER_BIT)
 	gl.glMatrixMode(gl.GL_PROJECTION)
