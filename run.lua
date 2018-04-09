@@ -81,25 +81,30 @@ Omega_k = 0	-- curvature
 -- radiation
 Omega_rad = 1e-4
 
---function Omega_Lambda(t) return 8 * math.pi * G * rho_Lambda_t0 / (3 * H_0^2) end
-Omega_Lambda = Omega_Lambda_t0
-Omega_b = Omega_b_t0
-Omega_c = Omega_c_t0
-function Omega_m() return Omega_b + Omega_c end
+local _1 = function(x) return x end	-- in the spirit of boost ...
+local D = function(x) return function() return x end end
+local G = function(x) return function() return _G[x] end end
 
-function Omega_tot() return Omega_Lambda + Omega_b + Omega_c end -- should be 1 ...
+--function Omega_Lambda(t) return 8 * math.pi * G * rho_Lambda_t0 / (3 * H_0^2) end
+Omega_Lambda = G'Omega_Lambda_t0'
+Omega_b = G'Omega_b_t0'
+Omega_c = G'Omega_c_t0'
+
+Omega_m = Omega_b + Omega_c
+Omega_tot = Omega_Lambda + Omega_b + Omega_c -- should be 1 ...
 
 -- Friedmann equation H(a) = a' / a
 -- page uses Omega_DE in the eqn, then says "Omega_Lambda works too", then proceeds to use Omega_Lambda everywhere else...
-function H(a) return H_0 * math.sqrt( (Omega_c + Omega_b) * a^-3 + Omega_rad * a^-4 + Omega_k * a^-2 + Omega_Lambda * a^(-3*(1+w)) ) end
+--function H(a) return H_0 * math.sqrt( (Omega_c + Omega_b) * a^-3 + Omega_rad * a^-4 + Omega_k * a^-2 + Omega_Lambda() * a^(-3*(1+w)) ) end
+H = H_0 * math.sqrt:o( Omega_m * _1^-3 + Omega_rad * _1^-4 + Omega_k * _1^-2 + Omega_Lambda * _1^(-3*(1+G'w')) ) 
+-- with w = -1 and Omega_k = 0 this becomes ...
+H = H_0 * math.sqrt:o( Omega_m * _1^-3 + Omega_rad * _1^-4 + Omega_Lambda) -- = a' / a, solve for a ...
 
 -- neglecting radiation energy and solving for H(a)
-function t_Lambda() return 2 / (3 * H_0 * math.sqrt(Omega_Lambda)) end
+t_Lambda = 2 / (3 * H_0 * math.sqrt:o(Omega_Lambda) )
 
-function a(t) 
-	return (Omega_m() / Omega_Lambda)^(1/3) * (math.sinh(t/t_Lambda()))^(2/3) 
-end
-
+-- what happens when Omega_Lambda = 0?
+a = (Omega_m / Omega_Lambda)^(1/3) * (math.sinh:o(_1/t_Lambda))^(2/3) 
 
 -- in years this should be 13.799e+9
 --print('time units', 13.799e+9 / t_0)
@@ -110,7 +115,7 @@ local matrix = require 'matrix'
 --[[
 local gnuplot = require 'gnuplot'
 local n = 1000
-local ts = matrix{n}:lambda(function(i) return i/n*2*t_0 end)
+local ts = matrix{n}:lambda(_1/n*2*t_0)
 local as = ts:map(a)
 gnuplot{
 	output = 'a.png',
@@ -131,14 +136,16 @@ function App:update()
 	gl.glLoadIdentity()
 
 	t_0 = bisect(0, 1, (a-1)^2, 20)
+	t_a_eq_0 = bisect(0, 1, a, 20)
 
 tmin = 0
-tmax = t_0 * 2
+tmax = t_0 * 3
 local trange = tmax - tmin
 local n = 1000
-local ts = matrix{n}:lambda(function(i) return i/n*tmax end)
+local ts = matrix{n}:lambda(_1*tmax/n)
 local as = ts:map(a)
-
+local y_eq_1 = ts:map(D(1))
+	
 	amax = table.sup(as)
 	amin = table.inf(as)
 	local arange = amax - amin
@@ -149,11 +156,12 @@ local as = ts:map(a)
 
 	for _,info in ipairs{
 		{buf=as, color={1,0,0}},
+		{buf=y_eq_1, color={1,1,1}},
 	} do
 		gl.glBegin(gl.GL_LINE_STRIP)
 		gl.glColor3f(table.unpack(info.color))
 		for i=1,n do
-			gl.glVertex2f(ts[i], as[i])
+			gl.glVertex2f(ts[i], info.buf[i])
 		end
 		gl.glEnd()
 	end
@@ -163,9 +171,9 @@ local ffi = require 'ffi'
 local f = ffi.new('float[1]', 0)
 function App:updateGUI()
 	for _,field in ipairs{
-		'Omega_Lambda',
-		'Omega_b',
-		'Omega_c',
+		'Omega_Lambda_t0',
+		'Omega_b_t0',
+		'Omega_c_t0',
 	} do
 		f[0] = _G[field]
 		if ig.igSliderFloat(field, f, 0, 1) then
@@ -179,6 +187,7 @@ function App:updateGUI()
 		'Omega_tot',
 		't_Lambda',
 		't_0',
+		't_a_eq_0',
 		'H_0_in_inv_s',
 		'rho_crit',
 	} do
