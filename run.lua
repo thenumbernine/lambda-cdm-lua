@@ -128,7 +128,7 @@ gnuplot{
 -- [[
 local ImGuiApp = require 'imguiapp'
 local gl = require 'ffi.OpenGL'
-local ig = require 'ffi.imgui'
+local ig = require 'imgui'
 local App = class(ImGuiApp)
 App.title = 'Lambda-CDM model'
 function App:update()
