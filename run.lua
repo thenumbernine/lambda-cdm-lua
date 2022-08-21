@@ -168,18 +168,13 @@ local y_eq_1 = ts:map(D(1))
 	end
 	App.super.update(self)
 end
-local ffi = require 'ffi'
-local f = ffi.new('float[1]', 0)
 function App:updateGUI()
 	for _,field in ipairs{
 		'Omega_Lambda_t0',
 		'Omega_b_t0',
 		'Omega_c_t0',
 	} do
-		f[0] = _G[field]
-		if ig.igSliderFloat(field, f, 0, 1) then
-			_G[field] = f[0]
-		end
+		ig.luatableSliderFloat(field, _G, field, 0, 1)
 	end
 
 	for _,field in ipairs{
