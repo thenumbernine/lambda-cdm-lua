@@ -192,5 +192,5 @@ function App:updateGUI()
 		ig.igText(field..' '..v)
 	end
 end
-App():run()
+return App():run()
 --]]
