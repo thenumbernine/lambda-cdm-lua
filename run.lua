@@ -127,9 +127,10 @@ gnuplot{
 --]]
 -- [[
 local ImGuiApp = require 'imguiapp'
-local gl = require 'ffi.OpenGL'
+local gl = require 'gl'
 local ig = require 'imgui'
-local App = class(ImGuiApp)
+local App = ImGuiApp:subclass()
+
 App.title = 'Lambda-CDM model'
 function App:update()
 	gl.glClear(gl.GL_COLOR_BUFFER_BIT)
