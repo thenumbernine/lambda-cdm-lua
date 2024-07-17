@@ -15,10 +15,10 @@ local env = setmetatable({}, {
 		rawset(env,k,v)
 	end,
 })
-if setfenv ~= nil then 
-	setfenv(1, env) 
+if setfenv ~= nil then
+	setfenv(1, env)
 else
-	_ENV = env 
+	_ENV = env
 end
 --]]
 
@@ -96,7 +96,7 @@ Omega_tot = Omega_Lambda + Omega_b + Omega_c -- should be 1 ...
 -- Friedmann equation H(a) = a' / a
 -- page uses Omega_DE in the eqn, then says "Omega_Lambda works too", then proceeds to use Omega_Lambda everywhere else...
 --function H(a) return H_0 * math.sqrt( (Omega_c + Omega_b) * a^-3 + Omega_rad * a^-4 + Omega_k * a^-2 + Omega_Lambda() * a^(-3*(1+w)) ) end
-H = H_0 * math.sqrt:o( Omega_m * _1^-3 + Omega_rad * _1^-4 + Omega_k * _1^-2 + Omega_Lambda * _1^(-3*(1+G'w')) ) 
+H = H_0 * math.sqrt:o( Omega_m * _1^-3 + Omega_rad * _1^-4 + Omega_k * _1^-2 + Omega_Lambda * _1^(-3*(1+G'w')) )
 -- with w = -1 and Omega_k = 0 this becomes ...
 H = H_0 * math.sqrt:o( Omega_m * _1^-3 + Omega_rad * _1^-4 + Omega_Lambda) -- = a' / a, solve for a ...
 
@@ -104,7 +104,7 @@ H = H_0 * math.sqrt:o( Omega_m * _1^-3 + Omega_rad * _1^-4 + Omega_Lambda) -- = 
 t_Lambda = 2 / (3 * H_0 * math.sqrt:o(Omega_Lambda) )
 
 -- what happens when Omega_Lambda = 0?
-a = (Omega_m / Omega_Lambda)^(1/3) * (math.sinh:o(_1/t_Lambda))^(2/3) 
+a = (Omega_m / Omega_Lambda)^(1/3) * (math.sinh:o(_1/t_Lambda))^(2/3)
 
 -- in years this should be 13.799e+9
 --print('time units', 13.799e+9 / t_0)
@@ -127,15 +127,54 @@ gnuplot{
 --]]
 -- [[
 local ImGuiApp = require 'imguiapp'
+local ffi = require 'ffi'
 local gl = require 'gl'
 local ig = require 'imgui'
-local App = ImGuiApp:subclass()
-
+local vec2f = require 'vec-ffi.vec2f'
+local App = require 'glapp.view'.apply(ImGuiApp)
 App.title = 'Lambda-CDM model'
+App.viewUseBuiltinMatrixMath = true
+
+local n = 1000
+function App:initGL()
+	App.super.initGL(self)
+
+	graphVtxs = require 'gl.arraybuffer'{
+		data = ffi.new('vec2f_t[?]', n),
+		size = ffi.sizeof'vec2f_t' * n,
+		count = n,
+		dim = 2,
+		mode = gl.GL_DYNAMIC_DRAW,
+	}:unbind()
+	graphObj = require 'gl.sceneobject'{
+		program = {
+			version = 'latest',
+			header = 'precision highp float;',
+			vertexCode = [[
+in vec2 vertex;
+uniform mat4 mvProjMat;
+void main() {
+	gl_Position = mvProjMat * vec4(vertex, 0., 1.);
+}
+]],
+			fragmentCode = [[
+out vec4 fragColor;
+uniform vec3 color;
+void main() {
+	fragColor = vec4(color, 1.);
+}
+]],
+		},
+		vertexes = graphVtxs,
+		geometry = {
+			mode = gl.GL_LINE_STRIP,
+			count = n,
+		},
+	}
+end
+
 function App:update()
 	gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-	gl.glMatrixMode(gl.GL_PROJECTION)
-	gl.glLoadIdentity()
 
 	t_0 = bisect(0, 1, (a-1)^2, 20)
 	t_a_eq_0 = bisect(0, 1, a, 20)
@@ -143,32 +182,38 @@ function App:update()
 tmin = 0
 tmax = t_0 * 3
 local trange = tmax - tmin
-local n = 1000
 local ts = matrix{n}:lambda(_1*tmax/n)
 local as = ts:map(a)
 local y_eq_1 = ts:map(D(1))
-	
+
 	amax = table.sup(as)
 	amin = table.inf(as)
 	local arange = amax - amin
-	gl.glOrtho(-.1 * trange + tmin, .1 * trange + tmax, -.1 * arange + amin, .1 * arange + amax, -1, 1)
-	
-	gl.glMatrixMode(gl.GL_MODELVIEW)
-	gl.glLoadIdentity()
+
+	self.view.projMat:setOrtho(-.1 * trange + tmin, .1 * trange + tmax, -.1 * arange + amin, .1 * arange + amax, -1, 1)
+	self.view.mvMat:setIdent()
+	self.view.mvProjMat:mul4x4(self.view.projMat, self.view.mvMat)
 
 	for _,info in ipairs{
 		{buf=as, color={1,0,0}},
 		{buf=y_eq_1, color={1,1,1}},
 	} do
-		gl.glBegin(gl.GL_LINE_STRIP)
-		gl.glColor3f(table.unpack(info.color))
+
 		for i=1,n do
-			gl.glVertex2f(ts[i], info.buf[i])
+			graphVtxs.data[i-1]:set(ts[i], info.buf[i])
 		end
-		gl.glEnd()
+		graphVtxs
+			:bind()
+			:updateData()
+			:unbind()
+		graphObj.uniforms.mvProjMat = self.view.mvProjMat.ptr
+		graphObj.uniforms.color = info.color
+		graphObj:draw()
 	end
+
 	App.super.update(self)
 end
+
 function App:updateGUI()
 	for _,field in ipairs{
 		'Omega_Lambda_t0',
