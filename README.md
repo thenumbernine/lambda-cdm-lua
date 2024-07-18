@@ -4,4 +4,6 @@ Lambda-CDM integrator, with a few parameters tweakable via the gui.
 
 Based on: <https://en.wikipedia.org/wiki/Lambda-CDM_model>
 
-![screenshot](screenshot.png)
+### [Launch](https://thenumbernine.github.io/glapp-js/run.html?dir=lambda-cdm&file=run.lua)
+
+[![screenshot](screenshot.png)](https://thenumbernine.github.io/glapp-js/run.html?dir=lambda-cdm&file=run.lua)
