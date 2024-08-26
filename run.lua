@@ -133,7 +133,6 @@ local ig = require 'imgui'
 local vec2f = require 'vec-ffi.vec2f'
 local App = require 'glapp.view'.apply(ImGuiApp)
 App.title = 'Lambda-CDM model'
-App.viewUseBuiltinMatrixMath = true
 
 local n = 1000
 function App:initGL()
