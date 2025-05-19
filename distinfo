@@ -1,0 +1,15 @@
+name = "lambda-cdm"
+files = {
+	["README.md"] = "lambda-cdm/README.md",
+	["bisect.lua"] = "lambda-cdm/bisect.lua",
+	["run.lua"] = "lambda-cdm/run.lua",
+	["screenshot.png"] = "lambda-cdm/screenshot.png",
+}
+deps = {
+	"ext",
+	"gl",
+	"glapp",
+	"imgui",
+	"matrix",
+	"vec-ffi",
+}
