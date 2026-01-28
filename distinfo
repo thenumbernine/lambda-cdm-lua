@@ -1,9 +1,14 @@
+--------------------------------------------
+-- generated with dist/build-distinfo.rua --
+--------------------------------------------
+
 name = "lambda-cdm"
 files = {
-	["README.md"] = "lambda-cdm/README.md",
-	["bisect.lua"] = "lambda-cdm/bisect.lua",
-	["run.lua"] = "lambda-cdm/run.lua",
-	["screenshot.png"] = "lambda-cdm/screenshot.png",
+	"README.md",
+	"bisect.lua",
+	"distinfo",
+	"run.lua",
+	"screenshot.png",
 }
 deps = {
 	"ext",
