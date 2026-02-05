@@ -139,8 +139,8 @@ function App:initGL()
 	App.super.initGL(self)
 
 	graphVtxs = require 'gl.arraybuffer'{
-		data = ffi.new('vec2f_t[?]', n),
-		size = ffi.sizeof'vec2f_t' * n,
+		data = ffi.new('vec2f[?]', n),
+		size = ffi.sizeof'vec2f' * n,
 		count = n,
 		dim = 2,
 		mode = gl.GL_DYNAMIC_DRAW,
