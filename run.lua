@@ -131,7 +131,7 @@ local gl = require 'gl'
 local ig = require 'imgui'
 local ImGuiApp = require 'imgui.app'
 local vec2f = require 'vec-ffi.vec2f'
-local App = require 'glapp.view'.apply(ImGuiApp)
+local App = require 'app3d.view'.apply(ImGuiApp)
 App.title = 'Lambda-CDM model'
 
 local n = 1000
